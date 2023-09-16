@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dynamic Filters</title>
+		<!-- Add Bootstrap CSS link here -->
+		<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div class="container mt-5">
+			<h2>Dynamic Filters</h2>
+			<form id="filterForm">
+				<div id="filterContainer">
+					<div class="row filter-row">
+						<div class="col-md-3">
+							<select class="form-control field-select" name="fields[]">
+								<option value="Name">Name</option>
+								<option value="Age">Age</option>
+								<option value="Hobby">Hobby</option>
+								<!-- Add more field options here -->
+							</select>
+						</div>
+						<div class="col-md-3">
+							<select class="form-control operator-select" name="operators[]">
+								<option value="=">Equal</option>
+								<option value="LIKE">Like</option>
+								<option value=">">Greater</option>
+								<!-- Add more operator options here -->
+							</select>
+						</div>
+						<div class="col-md-3">
+							<input type="text" class="form-control input-value" name="values[]" />
+						</div>
+						<div class="col-md-3">
+							<button type="button" class="btn btn-danger remove-filter">Remove</button>
+						</div>
+					</div>
+				</div>
+				<button type="button" class="btn btn-primary mt-3" id="addFilter">Add More</button>
+				<button type="submit" class="btn btn-success mt-3" id="submitFilters">Submit</button>
+			</form>
+			<div id="queryResult"></div>
+		</div>
+
+		<!-- Add Bootstrap JS and jQuery -->
+		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+		<script>
+			$(document).ready(function () {
+				// Add more filters
+				$('#addFilter').click(function () {
+					var newFilter = $('.filter-row:first').clone();
+					newFilter.find('input').val('');
+					$('#filterContainer').append(newFilter);
+				});
+
+				// Remove filter
+				$('#filterContainer').on('click', '.remove-filter', function () {
+					$(this).closest('.filter-row').remove();
+				});
+
+				// Handle form submission
+				$('#filterForm').submit(function (e) {
+					e.preventDefault();
+					var query = 'SELECT * FROM Students WHERE ';
+					var conditions = [];
+
+					$('.filter-row').each(function () {
+						var field = $(this).find('.field-select').val();
+						var operator = $(this).find('.operator-select').val();
+						var value = $(this).find('.input-value').val();
+
+						if (value.trim() !== '') {
+							conditions.push(field + ' ' + operator + ' ' + value);
+						}
+					});
+
+					if (conditions.length > 0) {
+						query += conditions.join(' AND ');
+					} else {
+						query += '1'; // Default to a true condition if no filters are applied
+					}
+
+					$('#queryResult').text(query);
+				});
+			});
+		</script>
+	</body>
+</html>

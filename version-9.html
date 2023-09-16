@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Dynamic Filters</title>
+		<!-- Add Bootstrap CSS link here -->
+		<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div class="container mt-5">
+			<a class="btn btn-warning text-dark" role="button" data-toggle="modal" data-target="#FilterNameModel">Filter</a>
+			<div id="queryResult" class="mt-3"></div>
+		</div>
+
+		<div class="modal fade" id="FilterNameModel" tabindex="-1" role="dialog" aria-labelledby="FilterNameModelLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg" role="document">
+				<div class="modal-content ">
+					<div class="modal-header">
+						<h5 class="modal-title" id="FilterNameModelLabel">Save Filter</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<form id="filterForm">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <input id="qry_name" name="qry_name" class="form-control form-control-sm"
+                                            placeholder="Enter filter name to save">
+                                    </div>
+                                </div>
+                            </div>
+							<div id="filterContainer"> <!-- style="min-height: 150px; "--> 
+								<div class="row filter-row mb-2">
+									<div class="col-md-4">
+										<select class="form-control field-select form-control-sm" name="fields[]">
+											<option value="" selected disabled>--SELECT FIELD--</option>
+											<option value="amazon_orders.shipping_address_state_or_region" data-is-date="false">State</option>
+											<option value="amazon_orders.amazon_order_id" data-is-date="false">Order ID</option>
+											<option value="amazon_orders.purchase_date" data-is-date="true">Purchase Date</option>
+											<option value="amazon_orders.earliest_ship_date" data-is-date="true">Earliest Ship Date</option>
+											<option value="amazon_orders.latest_ship_date" data-is-date="true">Latest Ship Date</option>
+											<option value="amazon_orders.order_total_amount" data-is-date="false">Total amount</option>
+											<option value="order_details.ProductName" data-is-date="false">Product Name</option>
+											<option value="order_details.ASIN" data-is-date="false">Product ASIN</option>
+											<option value="order_details.SKU" data-is-date="false">Product SKU</option>
+											<option value="amazon_orders.default_ship_from_location_address_name" data-is-date="false">Ship From Address</option>
+										</select>
+									</div>
+									<div class="col-md-2">
+										<select class="form-control operator-select form-control-sm" name="operators[]">
+											<option value="=">Equal</option>
+											<option value="LIKE">Like</option>
+											<option value=">">Greater</option>
+											<option value="<">Less</option>
+											<option value=">=">Greater or Equal</option>
+											<option value="<=">Less or Equal</option>
+											<option value="!=">Not Equal</option>
+											<option value="BETWEEN">Between</option>
+											<!-- Add more operator options here -->
+										</select>
+									</div>
+									<div class="col-md-2">
+										<input type="text" class="form-control input-value form-control-sm" name="values[]" />
+									</div>
+									<div class="col-md-2">
+										<input type="text" class="form-control input-value form-control-sm" name="values[]" style="display: none" />
+									</div>
+									<div class="col-md-2">
+										<!-- Hide the Remove button on the first row -->
+										<button type="button" class="btn btn-outline-danger remove-filter btn-sm" style="display: none">Remove</button>
+									</div>
+								</div>
+							</div>
+                            <button type="button" class="btn btn-primary mt-3 btn-sm" id="addFilter">AND</button>
+
+
+                            <div class="d-flex justify-content-between">
+                                <!-- <button type="button" class="btn btn-primary mt-3 btn-sm" id="addFilter">Add More</button> -->
+                                <div >
+                                    <button type="submit" class="btn btn-warning border-dark text-dark mt-3 btn-sm" id="submitFilters">Submit</button>
+                                    <button type="submit" class="btn btn-success mt-3 btn-sm " id="saveFilters">Save Filter</button>
+                                </div>
+                            </div>
+						</form>
+					</div>
+					
+				</div>
+			</div>
+		</div>
+
+		<!-- Add Bootstrap JS and jQuery -->
+		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+		<script>
+			$(document).ready(function () {
+				// Function to update input type based on selected field
+				function updateInputType() {
+					$('.field-select').each(function () {
+						var selectedField = $('option:selected', this);
+						var isDateField = selectedField.data('is-date');
+						var inputValues = $(this).closest('.filter-row').find('.input-value');
+
+						if (isDateField === true) {
+							inputValues.attr('type', 'date');
+						} else {
+							inputValues.attr('type', 'text');
+						}
+					});
+				}
+
+				// Initialize input type based on the initial selection
+				updateInputType();
+
+				// Handle field select change to update input type
+				$(document).on('change', '.field-select', function () {
+					updateInputType();
+				});
+
+				// Add more filters
+				$('#addFilter').click(function () {
+					var newFilter = $('.filter-row:first').clone();
+					newFilter.find('input').val('');
+					newFilter.find('select').val('=');
+					newFilter.find("input[name='values[]']").show();
+					newFilter.find("input[name='values[]']:last").hide();
+
+					// Show the Remove button for newly added rows
+					newFilter.find('.remove-filter').show();
+
+					$('#filterContainer').append(newFilter);
+					updateInputType(); // Update input type for the newly added filter
+				});
+
+				// Remove filter
+				$('#filterContainer').on('click', '.remove-filter', function () {
+					$(this).closest('.filter-row').remove();
+					updateInputType(); // Update input type when a filter is removed
+				});
+
+				// Handle operator change
+				$('#filterContainer').on('change', '.operator-select', function () {
+					var selectedOperator = $(this).val();
+					var inputValues = $(this).closest('.filter-row').find('.input-value');
+
+					if (selectedOperator === 'BETWEEN') {
+						inputValues.show();
+					} else {
+						inputValues.hide();
+						inputValues.first().show(); // Show the first input field
+					}
+				});
+
+				// Handle form submission
+				$('#filterForm').submit(function (e) {
+					e.preventDefault();
+					var query = 'SELECT * FROM Students WHERE ';
+					var conditions = [];
+
+					$('.filter-row').each(function () {
+						var field = $(this).find('.field-select').val();
+						var operator = $(this).find('.operator-select').val();
+						var values = $(this).find('.input-value');
+						var value1 = $(values[0]).val();
+						var value2 = $(values[1]).val();
+
+						var condition = '';
+
+						if (operator === 'BETWEEN') {
+							if (value1.trim() !== '' && value2.trim() !== '') {
+								condition = '(' + field + " BETWEEN '" + value1 + "' AND '" + value2 + "')";
+							}
+						} else if (value1.trim() !== '') {
+							if (operator === 'LIKE') {
+								condition = '(' + field + ' ' + operator + " '%" + value1 + "%')";
+							} else {
+								condition = '(' + field + ' ' + operator + " '" + value1 + "')";
+							}
+						}
+
+						if (condition.trim() !== '') {
+							conditions.push(condition);
+						}
+					});
+
+					if (conditions.length > 0) {
+						query += conditions.join(' AND ');
+					} else {
+						query += '1'; // Default to a true condition if no filters are applied
+					}
+
+					$('#queryResult').text(query);
+				});
+			});
+		</script>
+	</body>
+</html>
