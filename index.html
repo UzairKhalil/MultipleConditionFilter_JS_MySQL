@@ -100,125 +100,122 @@
 
 		<script>
 			$(document).ready(function () {
-// Function to update input type based on selected field
-function updateInputType() {
-$(".field-select").each(function () {
-var selectedField = $("option:selected", this);
-var isDateField = selectedField.data("is-date");
-var inputValues = $(this).closest(".filter-row").find(".input-value");
+				// Function to update input type based on selected field
+				function updateInputType() {
+					$('.field-select').each(function () {
+						var selectedField = $('option:selected', this);
+						var isDateField = selectedField.data('is-date');
+						var inputValues = $(this).closest('.filter-row').find('.input-value');
 
-if (isDateField === true) {
-inputValues.attr("type", "date");
-} else {
-inputValues.attr("type", "text");
-}
-});
-}
+						if (isDateField === true) {
+							inputValues.attr('type', 'date');
+						} else {
+							inputValues.attr('type', 'text');
+						}
+					});
+				}
 
-// Initialize input type based on the initial selection
-updateInputType();
+				// Initialize input type based on the initial selection
+				updateInputType();
 
-// Handle field select change to update input type
-$(document).on("change", ".field-select", function () {
-updateInputType();
-});
+				// Handle field select change to update input type
+				$(document).on('change', '.field-select', function () {
+					updateInputType();
+				});
 
-// Handle condition buttons
-$(document).on("click", ".add-filter", function () {
-var condition = $(this).data("condition");
-var newFilter = $(".filter-row:first").clone();
-newFilter.find("input").val("");
-newFilter.find("select").val("=");
-newFilter.find("input[name='values[]']").show();
-newFilter.find("input[name='values[]']:last").hide();
+				// Handle condition buttons
+				$(document).on('click', '.add-filter', function () {
+					var condition = $(this).data('condition');
+					var newFilter = $('.filter-row:first').clone();
+					newFilter.find('input').val('');
+					newFilter.find('select').val('=');
+					newFilter.find("input[name='values[]']").show();
+					newFilter.find("input[name='values[]']:last").hide();
 
-// Show the Remove button for newly added rows
-newFilter.find(".remove-filter").show();
+					// Show the Remove button for newly added rows
+					newFilter.find('.remove-filter').show();
 
-// Store the selected condition as data attribute on the filter row
-newFilter.data("condition", condition);
+					// Store the selected condition as data attribute on the filter row
+					newFilter.data('condition', condition);
 
-$("#filterContainer").append(newFilter);
-updateInputType(); // Update input type for the newly added filter
-});
+					$('#filterContainer').append(newFilter);
+					updateInputType(); // Update input type for the newly added filter
+				});
 
-// Remove filter
-$("#filterContainer").on("click", ".remove-filter", function () {
-$(this).closest(".filter-row").remove();
-updateInputType(); // Update input type when a filter is removed
-});
+				// Remove filter
+				$('#filterContainer').on('click', '.remove-filter', function () {
+					$(this).closest('.filter-row').remove();
+					updateInputType(); // Update input type when a filter is removed
+				});
 
-// Handle operator change
-$("#filterContainer").on("change", ".operator-select", function () {
-var selectedOperator = $(this).val();
-var inputValues = $(this).closest(".filter-row").find(".input-value");
+				// Handle operator change
+				$('#filterContainer').on('change', '.operator-select', function () {
+					var selectedOperator = $(this).val();
+					var inputValues = $(this).closest('.filter-row').find('.input-value');
 
-if (selectedOperator === "BETWEEN") {
-inputValues.show();
-} else {
-inputValues.hide();
-inputValues.first().show(); // Show the first input field
-}
-});
+					if (selectedOperator === 'BETWEEN') {
+						inputValues.show();
+					} else {
+						inputValues.hide();
+						inputValues.first().show(); // Show the first input field
+					}
+				});
 
-// Handle form submission
-$("#filterForm").submit(function (e) {
-e.preventDefault();
-var query = "SELECT * FROM Students WHERE ";
-var conditions = [];
+				// Handle form submission
+				$('#filterForm').submit(function (e) {
+					e.preventDefault();
+					var query = 'SELECT * FROM Students WHERE ';
+					var conditions = [];
 
-$(".filter-row").each(function () {
-var field = $(this).find(".field-select").val();
-var operator = $(this).find(".operator-select").val();
-var values = $(this).find(".input-value");
-var value1 = $(values[0]).val();
-var value2 = $(values[1]).val();
-var condition = "";
+					$('.filter-row').each(function () {
+						var field = $(this).find('.field-select').val();
+						var operator = $(this).find('.operator-select').val();
+						var values = $(this).find('.input-value');
+						var value1 = $(values[0]).val();
+						var value2 = $(values[1]).val();
+						var condition = '';
 
-if (operator === "BETWEEN") {
-if (value1.trim() !== "" && value2.trim() !== "") {
-condition = "(" + field + " BETWEEN '" + value1 + "' AND '" + value2 + "')";
-}
-} else if (value1.trim() !== "") {
-if (operator === "LIKE") {
-condition = "(" + field + " " + operator + " '%" + value1 + "%')";
-} else {
-condition = "(" + field + " " + operator + " '" + value1 + "')";
-}
-}
+						if (operator === 'BETWEEN') {
+							if (value1.trim() !== '' && value2.trim() !== '') {
+								condition = '(' + field + " BETWEEN '" + value1 + "' AND '" + value2 + "')";
+							}
+						} else if (value1.trim() !== '') {
+							if (operator === 'LIKE') {
+								condition = '(' + field + ' ' + operator + " '%" + value1 + "%')";
+							} else {
+								condition = '(' + field + ' ' + operator + " '" + value1 + "')";
+							}
+						}
 
-if (condition.trim() !== "") {
-// Get the condition from the data attribute
-var rowCondition = $(this).data("condition") || "";
-conditions.push(rowCondition + " " + condition);
-}
-});
+						if (condition.trim() !== '') {
+							// Get the condition from the data attribute
+							var rowCondition = $(this).data('condition') || '';
+							conditions.push(rowCondition + ' ' + condition);
+						}
+					});
 
-if (conditions.length > 0) {
-query += conditions.join(" ");
-} else {
-query += "1"; // Default to a true condition if no filters are applied
-}
+					if (conditions.length > 0) {
+						query += conditions.join(' ');
+					} else {
+						query += '1'; // Default to a true condition if no filters are applied
+					}
 
-$("#queryResult").text(query); 
-console.log(`before: ${query}`);
+					$('#queryResult').text(query);
+					console.log(`before: ${query}`);
 
-// var query = "AND (amazon_orders.amazon_order_id = 'ali') AND (amazon_orders.shipping_address_state_or_region = 'CA') OR (amazon_orders.shipping_address_state_or_region = 'nx')";
+					// var query = "AND (amazon_orders.amazon_order_id = 'ali') AND (amazon_orders.shipping_address_state_or_region = 'CA') OR (amazon_orders.shipping_address_state_or_region = 'nx')";
 
-// Remove closing parenthesis before OR
-query = query.replace(/\)\s+OR/g, ' OR');
+					// Remove closing parenthesis before OR
+					query = query.replace(/\)\s+OR/g, ' OR');
 
-// Remove opening parenthesis after OR
-query = query.replace(/OR\s+\(/g, 'OR ');
+					// Remove opening parenthesis after OR
+					query = query.replace(/OR\s+\(/g, 'OR ');
 
-$("#queryResultafter").text(query); 
-// console.log(query);
-console.log(`after: ${query}`);
-
-
-});
-});
-
+					$('#queryResultafter').text(query);
+					// console.log(query);
+					console.log(`after: ${query}`);
+				});
+			});
 		</script>
 	</body>
 </html>
